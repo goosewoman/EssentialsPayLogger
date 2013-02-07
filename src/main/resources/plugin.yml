@@ -1,4 +1,4 @@
-name: MissingEssentials
+name: EssentialsPayLogger
 main: com.radthorne.EssentialsPayLogger.EssentialsPayLogger
 version: 1.0
 author: kukelekuuk00
