@@ -1,1 +1,4 @@
-This file was created by IntelliJ IDEA 12.0.3 for binding GitHub repository
+An Essentials add-on plugin that logs /pay and lets peopel access those logs with /transactions
+http://dev.bukkit.org/server-mods/essentials/ is required
+
+Make sure you deny the essentials.pay permission and give people EssentialsPayLogger.pay to log payments.
