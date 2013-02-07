@@ -1,0 +1,24 @@
+name: MissingEssentials
+main: com.radthorne.EssentialsPayLogger.EssentialsPayLogger
+version: 1.0
+author: kukelekuuk00
+depend: [Essentials]
+
+commands:
+    pay:
+        description: Pays another player from your balance
+        usage: /<command> <player> <amount>
+        aliases: [lpay]
+        permission: essentialspaylogger.pay
+        permission-message: You don't have permission to do this.
+    transactions:
+        description: Shows a list of recent transactions
+        usage: /<command> [page|player] [page]
+        aliases: [ltransactions, trans, ltrans]
+        permission: essentialspaylogger.transactions
+        permission-message: You don't have permission to do this.
+permissions:
+    essentialspaylogger.pay:
+        description: Gives access to the /pay command.
+    essentialspaylogger.transactions:
+        description: Gives access to the /transactions command.
