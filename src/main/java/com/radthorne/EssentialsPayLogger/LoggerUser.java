@@ -17,6 +17,9 @@ public class LoggerUser extends UserData implements IUser {
   private final File folder;
   private final EssentialsConf config;
   private List<String> transactions;
+  //TODO: make limit configurable.
+  // Limit of the amount of transactions that are saved.
+  private final int limit = 90;
 
   public LoggerUser(Player base, IEssentials ess, EssentialsPayLogger lEss) {
     super(base, ess);
@@ -47,6 +50,10 @@ public class LoggerUser extends UserData implements IUser {
   public final void loadLConfig() {
     config.load();
     transactions = _getTransactions();
+    // remove some values when the transactionlist exceeds the limit.
+    while (transactions.size() > limit) {
+      transactions.remove(0);
+    }
   }
 
 
@@ -57,6 +64,7 @@ public class LoggerUser extends UserData implements IUser {
 
   //Method that returns the LoggerUser's transactions List
   public List<String> getTransactions() {
+
     return transactions;
   }
 
@@ -74,9 +82,7 @@ public class LoggerUser extends UserData implements IUser {
 
   // Method that adds the transaction to the transactions List variable and saves it to a file.
   public void addTransaction(double amount, Boolean received, LoggerUser otherUser) {
-    //TODO: make limit configurable.
-    // Limit of the amount of transactions that are saved.
-    int limit = 90;
+
     String sentReceived;
     // if received, make the message say <currency><amount> received from <player>,
     // else, make the message say <currency><amount> sent to <player>
@@ -89,7 +95,8 @@ public class LoggerUser extends UserData implements IUser {
     String message = Util.displayCurrency(amount, ess) + " " + sentReceived + " " + otherUser.getName();
     // add the message to the transactions List variable and remove the oldest transaction from the list if the size has exceeded the limit.
     transactions.add(message);
-    if (transactions.size() > limit) {
+    // a while loop, in case someone manually added some strings to the StringList
+    while (transactions.size() > limit) {
       transactions.remove(0);
     }
     //save the transactions to the file.
