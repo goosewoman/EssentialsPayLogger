@@ -50,6 +50,17 @@ public class EssentialsPayLogger extends JavaPlugin {
   public void onDisable() {
   }
 
+  // Method that sends a message if the user is not authorized, returns true if authorized.
+  public boolean isAuthorized(User user, String permission) {
+    if (user != null && !user.isAuthorized(permission)) {
+      this.getLogger().log(Level.WARNING, _("deniedAccessCommand", user.getName()));
+      user.sendMessage(_("noAccessCommand"));
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   // returns the Essentials plugin, null if Essentials isn't installed.
   private IEssentials getEss() {
     return (IEssentials) this.getServer().getPluginManager().getPlugin("Essentials");
@@ -76,11 +87,16 @@ public class EssentialsPayLogger extends JavaPlugin {
     try {
       // Command handling, use appropriate method for each command.
       if (command.getName().equalsIgnoreCase("pay")) {
-        Commandpay(server, user, lUser, label, args);
+        if (isAuthorized(user, "essentialspaylogger.pay")) {
+          Commandpay(server, user, lUser, label, args);
+        }
+
         return true;
       }
       if (command.getName().equalsIgnoreCase("transactions")) {
-        CommandTransactions(server, sender, user, lUser, label, args);
+        if (isAuthorized(user, "essentialspaylogger.transactions")) {
+          CommandTransactions(server, sender, user, lUser, label, args);
+        }
         return true;
       }
       // mimicking the error handling in Essentials.
@@ -106,7 +122,7 @@ public class EssentialsPayLogger extends JavaPlugin {
    */
 
   // Begin of stolen code
-  public boolean Commandpay(Server server, User user, LoggerUser lUser, String commandLabel, String[] args) throws Exception {
+  public void Commandpay(Server server, User user, LoggerUser lUser, String commandLabel, String[] args) throws Exception {
     //my edit
     if (user == null) {
       throw new Exception("§cError: §4Only in-game players can use " + commandLabel + ".");
@@ -146,7 +162,6 @@ public class EssentialsPayLogger extends JavaPlugin {
     if (!foundUser) {
       throw new NotEnoughArgumentsException(_("playerNotFound"));
     }
-    return true;
   }
   //end of stolen code
 
@@ -198,13 +213,9 @@ public class EssentialsPayLogger extends JavaPlugin {
   // The /transactions command
   public void CommandTransactions(Server server, CommandSender sender, User user, LoggerUser lUser, String commandLabel, String[] args) throws Exception {
 
-    //check if the args match /transactions <username> [page]
-    if (args.length >= 1 && !isInt(args[0])) {
-      if (user != null) {
-        if (!user.isAuthorized("essentialspaylogger.transactions.others")) {
-          return;
-        }
-      }
+    //check if the args match /transactions <username> [page] and if the user is authorized or the console.
+    if (args.length >= 1 && !isInt(args[0]) && isAuthorized(user, "essentialspaylogger.transactions.others")) {
+
       // variable to check if the user is online
       boolean online = false;
       //loop through every online player whose name matches the username provided

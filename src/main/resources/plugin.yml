@@ -9,14 +9,10 @@ commands:
         description: Pays another player from your balance
         usage: /<command> <player> <amount>
         aliases: [lpay, logpay]
-        permission: essentialspaylogger.pay
-        permission-message: You don't have permission to do this.
     transactions:
         description: Shows a list of recent transactions
         usage: /<command> [page|player] [page]
         aliases: [ltransactions, trans, ltrans, logtrans, logtransactions]
-        permission: essentialspaylogger.transactions
-        permission-message: You don't have permission to do this.
 permissions:
     essentialspaylogger.pay:
         description: Gives access to the /pay command.
