@@ -23,4 +23,4 @@ permissions:
     essentialspaylogger.transactions:
         description: Gives access to the /transactions command.
     essentialspaylogger.transactions.others:
-            description: Gives access to the /transactions <username> command.
+        description: Gives access to the /transactions <username> command.
