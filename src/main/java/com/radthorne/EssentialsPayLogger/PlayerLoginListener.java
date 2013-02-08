@@ -8,14 +8,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 
 public class PlayerLoginListener implements Listener {
-  private final EssentialsPayLogger mEss;
+  private final EssentialsPayLogger lEss;
 
   public PlayerLoginListener(EssentialsPayLogger plugin) {
-    this.mEss = plugin;
+    this.lEss = plugin;
   }
 
   @EventHandler
   public void onPlayerLogin(PlayerLoginEvent event) {
-    new LoggerUser(event.getPlayer(), mEss.ess, mEss).reloadMConfig();
+    //load LoggerUser for player, this will generate an empty yml file.
+    new LoggerUser(event.getPlayer(), lEss.ess, lEss).loadLConfig();
   }
 }

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import static com.earth2me.essentials.I18n._;
 
@@ -29,7 +30,13 @@ public class EssentialsPayLogger extends JavaPlugin {
 
   @Override
   public void onEnable() {
+    // get Essentials plugin and show an error message and disable the plugin when Essentials is not installed,
+    // this should already be handled by bukkit, but I like making sure it works without exploding.
     this.ess = getEss();
+    if (this.ess == null) {
+      this.getLogger().log(Level.SEVERE, "This plugin requires Essentials, download it from dev.bukkit.org");
+      this.getPluginLoader().disablePlugin(this);
+    }
     getServer().getPluginManager().registerEvents(new PlayerLoginListener(this), this);
     try {
       Metrics metrics = new Metrics(this);
@@ -43,11 +50,13 @@ public class EssentialsPayLogger extends JavaPlugin {
   public void onDisable() {
   }
 
+  // returns the Essentials plugin, null if Essentials isn't installed.
   private IEssentials getEss() {
     return (IEssentials) this.getServer().getPluginManager().getPlugin("Essentials");
   }
 
-  public LoggerUser getMUser(Object player) {
+  //Get the appropriate LoggerUser for this Player Object.
+  public LoggerUser getLUser(Object player) {
     if (player instanceof Player) {
       return new LoggerUser((Player) player, ess, this);
     }
@@ -58,18 +67,23 @@ public class EssentialsPayLogger extends JavaPlugin {
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     Server server = this.getServer();
     User user = null;
-    LoggerUser mUser = null;
+    LoggerUser lUser = null;
+    // if sender is a Player, set the lUser and user variables to the appropriate LoggerUser and User, else leave them at null;
     if (sender instanceof Player) {
       user = ess.getUser(sender);
-      mUser = getMUser(sender);
+      lUser = getLUser(sender);
     }
     try {
+      // Command handling, use appropriate method for each command.
       if (command.getName().equalsIgnoreCase("pay")) {
-        return Commandpay(server, user, mUser, label, args);
+        Commandpay(server, user, lUser, label, args);
+        return true;
       }
       if (command.getName().equalsIgnoreCase("transactions")) {
-        return CommandTransaction(server, user, mUser, label, args);
+        CommandTransactions(server, sender, user, lUser, label, args);
+        return true;
       }
+      // mimicking the error handling in Essentials.
     } catch (NotEnoughArgumentsException ex) {
       sender.sendMessage(command.getDescription());
       sender.sendMessage(command.getUsage().replaceAll("<command>", label));
@@ -92,7 +106,7 @@ public class EssentialsPayLogger extends JavaPlugin {
    */
 
   // Begin of stolen code
-  public boolean Commandpay(Server server, User user, LoggerUser mUser, String commandLabel, String[] args) throws Exception {
+  public boolean Commandpay(Server server, User user, LoggerUser lUser, String commandLabel, String[] args) throws Exception {
     //my edit
     if (user == null) {
       throw new Exception("§cError: §4Only in-game players can use " + commandLabel + ".");
@@ -121,10 +135,10 @@ public class EssentialsPayLogger extends JavaPlugin {
       foundUser = true;
 
       //my edit
-      LoggerUser mU = getMUser(p);
-      if (!mU.getName().equals(mUser.getName())) {
-        mU.addTransaction(amount, true, mUser);
-        mUser.addTransaction(amount, false, mU);
+      LoggerUser lU = getLUser(p);
+      if (!lU.getName().equals(lUser.getName())) {
+        lU.addTransaction(amount, true, lUser);
+        lUser.addTransaction(amount, false, lU);
       }
       //
     }
@@ -136,6 +150,8 @@ public class EssentialsPayLogger extends JavaPlugin {
   }
   //end of stolen code
 
+
+  //simple method that checks whether the string is an integer or not.
   public static boolean isInt(String s) {
     try {
       Integer.parseInt(s);
@@ -145,61 +161,76 @@ public class EssentialsPayLogger extends JavaPlugin {
     return true;
   }
 
+  //empty transactions ArrayListInput.
   private static ArrayListInput transactions = new ArrayListInput();
 
+
+  //function to read files of offline players and return the transactions StringList.
   private List<String> offlineTransactions(String base) throws Exception {
     FileConfiguration config;
     File folder;
+    //get transactions folder, create a new one if it doesn't exist. (It should already exist by now, but there's no harm in doublechecking)
     folder = new File(this.getDataFolder(), "transactions");
     if (!folder.exists()) {
       folder.mkdirs();
     }
+    //Open the <username>.yml File
     File fConfig = new File(folder, Util.sanitizeFileName(base) + ".yml");
+    //Turn the File into a YamlConfiguration file
     config = YamlConfiguration.loadConfiguration(fConfig);
+    // If the file doesn't exist, show an error message.
     if (!fConfig.exists()) {
       throw new NotEnoughArgumentsException(_("playerNotFound"));
     }
+    //return stringlist of transactions
     return config.getStringList("transactions");
   }
 
-  public boolean CommandTransaction(Server server, User user, LoggerUser mUser, String commandLabel, String[] args) throws Exception {
-
-    if (user == null) {
-      throw new Exception("§cError: §4Only in-game players can use " + commandLabel + ".");
+  //function to prevent repeating this in the commandTransactions function
+  private void trans(List<String> trans) {
+    Collections.reverse(trans);
+    transactions.getLines().clear();
+    for (String transaction : trans) {
+      transactions.getLines().add(transaction);
     }
-    if (args.length >= 1 && !isInt(args[0])) {
-      boolean foundUser = false;
-      for (Player p : server.matchPlayer(args[0])) {
-        LoggerUser mU = getMUser(p);
-        List<String> trans = mU.getTransactions();
-        Collections.reverse(trans);
-        transactions.getLines().clear();
-        for (String transaction : trans) {
-          transactions.getLines().add(transaction);
-        }
-        new TextPager(transactions).showPage(args.length > 1 ? args[1] : null, args.length > 2 ? args[2] : null, commandLabel, user);
-        foundUser = true;
-      }
-      if (!foundUser) {
-        List<String> trans = offlineTransactions(args[0]);
-        Collections.reverse(trans);
-        transactions.getLines().clear();
-        for (String transaction : trans) {
-          transactions.getLines().add(transaction);
-        }
-        new TextPager(transactions).showPage(args.length > 1 ? args[1] : null, args.length > 2 ? args[2] : null, commandLabel, user);
-      }
-      return true;
-    } else {
+  }
 
-      List<String> trans = mUser.getTransactions();
-      Collections.reverse(trans);
-      transactions.getLines().clear();
-      for (String transaction : trans) {
-        transactions.getLines().add(transaction);
+  // The /transactions command
+  public void CommandTransactions(Server server, CommandSender sender, User user, LoggerUser lUser, String commandLabel, String[] args) throws Exception {
+
+    //check if the args match /transactions <username> [page]
+    if (args.length >= 1 && !isInt(args[0])) {
+      if (user != null) {
+        if (!user.isAuthorized("essentialspaylogger.transactions.others")) {
+          return;
+        }
       }
+      // variable to check if the user is online
+      boolean online = false;
+      //loop through every online player whose name matches the username provided
+      for (Player p : server.matchPlayer(args[0])) {
+        List<String> trans = getLUser(p).getTransactions();
+        trans(trans);
+        // show the transaction page.
+        new TextPager(transactions).showPage(args.length > 1 ? args[1] : null, null, commandLabel, sender);
+        // set the variable to true to indicate that the user is online.
+        online = true;
+      }
+      //if user is not online, use the offline method.
+      if (!online) {
+        List<String> trans = offlineTransactions(args[0]);
+        trans(trans);
+        new TextPager(transactions).showPage(args.length > 1 ? args[1] : null, null, commandLabel, sender);
+      }
+    } else {
+      // /transactions [page]
+      // This is the regular function of the command, for yourself.
+      if (user == null) {
+        throw new Exception("§cError: §4Only in-game players can use " + commandLabel + ".");
+      }
+      List<String> trans = lUser.getTransactions();
+      trans(trans);
       new TextPager(transactions).showPage(args.length > 0 ? args[0] : null, args.length > 1 ? args[1] : null, commandLabel, user);
-      return true;
     }
   }
 

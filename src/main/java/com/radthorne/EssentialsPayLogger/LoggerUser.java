@@ -16,14 +16,19 @@ import java.util.List;
 public class LoggerUser extends UserData implements IUser {
   private final File folder;
   private final EssentialsConf config;
+  private List<String> transactions;
 
-  public LoggerUser(Player base, IEssentials ess, EssentialsPayLogger mEss) {
+  public LoggerUser(Player base, IEssentials ess, EssentialsPayLogger lEss) {
     super(base, ess);
-    folder = new File(mEss.getDataFolder(), "transactions");
+    // get the <datafolder>/transactions folder
+    folder = new File(lEss.getDataFolder(), "transactions");
+    // Create the folder if it doesn't exist.
     if (!folder.exists()) {
       folder.mkdirs();
     }
+    //Open the <username>.yml File
     File fConfig = new File(folder, Util.sanitizeFileName(base.getName()) + ".yml");
+    //If the <username>.yml file doesn't exist, create a new one.
     if (!fConfig.exists()) {
       try {
         fConfig.createNewFile();
@@ -32,55 +37,67 @@ public class LoggerUser extends UserData implements IUser {
         e.printStackTrace();
       }
     }
+    // create a new EssentialsConf from the File and load the config.
     config = new EssentialsConf(fConfig);
-    reloadMConfig();
+    loadLConfig();
   }
 
-  public final void reloadMConfig() {
+
+  // Method that loads the config and populates the transactions List with the _getTransactions() Method
+  public final void loadLConfig() {
     config.load();
     transactions = _getTransactions();
   }
 
-  private List<String> transactions;
 
-
+  //Method to get the transactions StringList from the config.
   private List<String> _getTransactions() {
     return config.getStringList("transactions");
   }
 
+  //Method that returns the LoggerUser's transactions List
   public List<String> getTransactions() {
     return transactions;
   }
 
+  // Method that saves the transactions to the config and updates the transactions List variable.
   public void setTransactions(List<String> transactions) {
+    // if the list is null, re-read the config and get the transactions from there.
     if (transactions == null) {
-      config.removeProperty("transactions");
       transactions = _getTransactions();
-    } else {
-      config.setProperty("transactions", transactions);
     }
+    //set the config to the property you provided and save the config
+    config.setProperty("transactions", transactions);
     this.transactions = transactions;
     config.save();
   }
 
+  // Method that adds the transaction to the transactions List variable and saves it to a file.
   public void addTransaction(double amount, Boolean received, LoggerUser otherUser) {
     //TODO: make limit configurable.
+    // Limit of the amount of transactions that are saved.
     int limit = 90;
-    String sentReceived = "";
+    String sentReceived;
+    // if received, make the message say <currency><amount> received from <player>,
+    // else, make the message say <currency><amount> sent to <player>
     if (received) {
-      sentReceived = " received from ";
+      sentReceived = "received from";
     } else {
-      sentReceived = " sent to ";
+      sentReceived = "sent to";
     }
-    String message = Util.displayCurrency(amount, ess) + sentReceived + otherUser.getName();
+    // Build the message
+    String message = Util.displayCurrency(amount, ess) + " " + sentReceived + " " + otherUser.getName();
+    // add the message to the transactions List variable and remove the oldest transaction from the list if the size has exceeded the limit.
     transactions.add(message);
-    setTransactions(transactions);
     if (transactions.size() > limit) {
       transactions.remove(0);
-      setTransactions(transactions);
     }
+    //save the transactions to the file.
+    setTransactions(transactions);
   }
 
+
+  //A ton of implemented methods, all unused.
   @Override
   public void setTexturePack(String s) {
   }
@@ -123,56 +140,56 @@ public class LoggerUser extends UserData implements IUser {
 
   @Override
   public boolean isAuthorized(String s) {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 
   @Override
   public boolean isAuthorized(IEssentialsCommand iEssentialsCommand) {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 
   @Override
   public boolean isAuthorized(IEssentialsCommand iEssentialsCommand, String s) {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 
   @Override
   public void takeMoney(double v) {
-    //To change body of implemented methods use File | Settings | File Templates.
+
   }
 
   @Override
   public void giveMoney(double v) {
-    //To change body of implemented methods use File | Settings | File Templates.
+
   }
 
   @Override
   public boolean canAfford(double v) {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 
   @Override
   public String getGroup() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return null;
   }
 
   @Override
   public void setLastLocation() {
-    //To change body of implemented methods use File | Settings | File Templates.
+
   }
 
   @Override
   public boolean isHidden() {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 
   @Override
   public Teleport getTeleport() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return null;
   }
 
   @Override
   public boolean isIgnoreExempt() {
-    return false;  //To change body of implemented methods use File | Settings | File Templates.
+    return false;
   }
 }
