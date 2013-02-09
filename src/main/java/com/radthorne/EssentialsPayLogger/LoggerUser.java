@@ -16,219 +16,219 @@ import java.util.List;
 public class LoggerUser extends UserData implements IUser
 {
 
-    private final File folder;
-    private final EssentialsConf config;
-    private List<String> transactions;
-    //TODO: make limit configurable.
-    // Limit of the amount of transactions that are saved.
-    private final int limit = 90;
+        private final File folder;
+        private final EssentialsConf config;
+        private List<String> transactions;
+        //TODO: make limit configurable.
+        // Limit of the amount of transactions that are saved.
+        private final int limit = 90;
 
-    public LoggerUser( Player base, IEssentials ess, EssentialsPayLogger lEss )
-    {
-        super( base, ess );
-        folder = new File( lEss.getDataFolder(), "transactions" );
-        if( !folder.exists() )
+        public LoggerUser( Player base, IEssentials ess, EssentialsPayLogger lEss )
         {
-            folder.mkdirs();
+                super( base, ess );
+                folder = new File( lEss.getDataFolder(), "transactions" );
+                if( !folder.exists() )
+                {
+                        folder.mkdirs();
+                }
+                //Open the <username>.yml File
+                File fConfig = new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" );
+                if( !fConfig.exists() )
+                {
+                        try
+                        {
+                                fConfig.createNewFile();
+                                System.out.println( String.format( "Creating new transactionfile for %s", base.getName() ) );
+                        }
+                        catch( IOException e )
+                        {
+                                e.printStackTrace();
+                        }
+                }
+                config = new EssentialsConf( fConfig );
+                loadLConfig();
         }
-        //Open the <username>.yml File
-        File fConfig = new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" );
-        if( !fConfig.exists() )
+
+
+        // Method that loads the config and populates the transactions List with the _getTransactions() Method
+        public final void loadLConfig()
         {
-            try
-            {
-                fConfig.createNewFile();
-                System.out.println( String.format( "Creating new transactionfile for %s", base.getName() ) );
-            }
-            catch( IOException e )
-            {
-                e.printStackTrace();
-            }
+                config.load();
+                transactions = _getTransactions();
+                // remove some values when the transactionlist exceeds the limit.
+                while( transactions.size() > limit )
+                {
+                        transactions.remove( 0 );
+                }
         }
-        config = new EssentialsConf( fConfig );
-        loadLConfig();
-    }
 
 
-    // Method that loads the config and populates the transactions List with the _getTransactions() Method
-    public final void loadLConfig()
-    {
-        config.load();
-        transactions = _getTransactions();
-        // remove some values when the transactionlist exceeds the limit.
-        while( transactions.size() > limit )
+        //Method to get the transactions StringList from the config.
+        private List<String> _getTransactions()
         {
-            transactions.remove( 0 );
+                return config.getStringList( "transactions" );
         }
-    }
 
-
-    //Method to get the transactions StringList from the config.
-    private List<String> _getTransactions()
-    {
-        return config.getStringList( "transactions" );
-    }
-
-    //Method that returns the LoggerUser's transactions List
-    public List<String> getTransactions()
-    {
-        return transactions;
-    }
-
-    // Method that saves the transactions to the config and updates the transactions List variable.
-    public void setTransactions( List<String> transactions )
-    {
-        // if the list is null, re-read the config and get the transactions from there.
-        if( transactions == null )
+        //Method that returns the LoggerUser's transactions List
+        public List<String> getTransactions()
         {
-            transactions = _getTransactions();
+                return transactions;
         }
-        //set the config to the property you provided and save the config
-        config.setProperty( "transactions", transactions );
-        this.transactions = transactions;
-        config.save();
-    }
 
-    // Method that adds the transaction to the transactions List variable and saves it to a file.
-    public void addTransaction( double amount, Boolean received, LoggerUser otherUser )
-    {
-
-        String sentReceived;
-        // if received, make the message say <currency><amount> received from <player>,
-        // else, make the message say <currency><amount> sent to <player>
-        if( received )
+        // Method that saves the transactions to the config and updates the transactions List variable.
+        public void setTransactions( List<String> transactions )
         {
-            sentReceived = "received from";
+                // if the list is null, re-read the config and get the transactions from there.
+                if( transactions == null )
+                {
+                        transactions = _getTransactions();
+                }
+                //set the config to the property you provided and save the config
+                config.setProperty( "transactions", transactions );
+                this.transactions = transactions;
+                config.save();
         }
-        else
+
+        // Method that adds the transaction to the transactions List variable and saves it to a file.
+        public void addTransaction( double amount, Boolean received, LoggerUser otherUser )
         {
-            sentReceived = "sent to";
+
+                String sentReceived;
+                // if received, make the message say <currency><amount> received from <player>,
+                // else, make the message say <currency><amount> sent to <player>
+                if( received )
+                {
+                        sentReceived = "received from";
+                }
+                else
+                {
+                        sentReceived = "sent to";
+                }
+                String message = Util.displayCurrency( amount, ess ) + " " + sentReceived + " " + otherUser.getName();
+                transactions.add( message );
+                //remove the oldest transaction from the list if the size has exceeded the limit.
+                // a while loop, in case it exceeds the limit by more than one.
+                while( transactions.size() > limit )
+                {
+                        transactions.remove( 0 );
+                }
+                setTransactions( transactions );
         }
-        String message = Util.displayCurrency( amount, ess ) + " " + sentReceived + " " + otherUser.getName();
-        transactions.add( message );
-        //remove the oldest transaction from the list if the size has exceeded the limit.
-        // a while loop, in case it exceeds the limit by more than one.
-        while( transactions.size() > limit )
+
+
+        //A ton of implemented methods, all unused.
+        @Override
+        public void setTexturePack( String s )
         {
-            transactions.remove( 0 );
         }
-        setTransactions( transactions );
-    }
 
+        @Override
+        public boolean getRemoveWhenFarAway()
+        {
+                return false;
+        }
 
-    //A ton of implemented methods, all unused.
-    @Override
-    public void setTexturePack( String s )
-    {
-    }
+        @Override
+        public void setRemoveWhenFarAway( boolean b )
+        {
+        }
 
-    @Override
-    public boolean getRemoveWhenFarAway()
-    {
-        return false;
-    }
+        @Override
+        public EntityEquipment getEquipment()
+        {
+                return null;
+        }
 
-    @Override
-    public void setRemoveWhenFarAway( boolean b )
-    {
-    }
+        @Override
+        public void setCanPickupItems( boolean b )
+        {
+        }
 
-    @Override
-    public EntityEquipment getEquipment()
-    {
-        return null;
-    }
+        @Override
+        public boolean getCanPickupItems()
+        {
+                return false;
+        }
 
-    @Override
-    public void setCanPickupItems( boolean b )
-    {
-    }
+        @Override
+        public void setMaxHealth( int i )
+        {
+        }
 
-    @Override
-    public boolean getCanPickupItems()
-    {
-        return false;
-    }
+        @Override
+        public void resetMaxHealth()
+        {
+        }
 
-    @Override
-    public void setMaxHealth( int i )
-    {
-    }
+        @Override
+        public Location getLocation( Location location )
+        {
+                return null;
+        }
 
-    @Override
-    public void resetMaxHealth()
-    {
-    }
+        @Override
+        public boolean isAuthorized( String s )
+        {
+                return false;
+        }
 
-    @Override
-    public Location getLocation( Location location )
-    {
-        return null;
-    }
+        @Override
+        public boolean isAuthorized( IEssentialsCommand iEssentialsCommand )
+        {
+                return false;
+        }
 
-    @Override
-    public boolean isAuthorized( String s )
-    {
-        return false;
-    }
+        @Override
+        public boolean isAuthorized( IEssentialsCommand iEssentialsCommand, String s )
+        {
+                return false;
+        }
 
-    @Override
-    public boolean isAuthorized( IEssentialsCommand iEssentialsCommand )
-    {
-        return false;
-    }
+        @Override
+        public void takeMoney( double v )
+        {
 
-    @Override
-    public boolean isAuthorized( IEssentialsCommand iEssentialsCommand, String s )
-    {
-        return false;
-    }
+        }
 
-    @Override
-    public void takeMoney( double v )
-    {
+        @Override
+        public void giveMoney( double v )
+        {
 
-    }
+        }
 
-    @Override
-    public void giveMoney( double v )
-    {
+        @Override
+        public boolean canAfford( double v )
+        {
+                return false;
+        }
 
-    }
+        @Override
+        public String getGroup()
+        {
+                return null;
+        }
 
-    @Override
-    public boolean canAfford( double v )
-    {
-        return false;
-    }
+        @Override
+        public void setLastLocation()
+        {
 
-    @Override
-    public String getGroup()
-    {
-        return null;
-    }
+        }
 
-    @Override
-    public void setLastLocation()
-    {
+        @Override
+        public boolean isHidden()
+        {
+                return false;
+        }
 
-    }
+        @Override
+        public Teleport getTeleport()
+        {
+                return null;
+        }
 
-    @Override
-    public boolean isHidden()
-    {
-        return false;
-    }
-
-    @Override
-    public Teleport getTeleport()
-    {
-        return null;
-    }
-
-    @Override
-    public boolean isIgnoreExempt()
-    {
-        return false;
-    }
+        @Override
+        public boolean isIgnoreExempt()
+        {
+                return false;
+        }
 }

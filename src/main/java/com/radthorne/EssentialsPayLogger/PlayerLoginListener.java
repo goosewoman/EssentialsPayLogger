@@ -11,17 +11,17 @@ import org.bukkit.event.player.PlayerLoginEvent;
 public class PlayerLoginListener implements Listener
 {
 
-    private final EssentialsPayLogger lEss;
+        private final EssentialsPayLogger lEss;
 
-    public PlayerLoginListener( EssentialsPayLogger plugin )
-    {
-        this.lEss = plugin;
-    }
+        public PlayerLoginListener( EssentialsPayLogger plugin )
+        {
+                this.lEss = plugin;
+        }
 
-    @EventHandler
-    public void onPlayerLogin( PlayerLoginEvent event )
-    {
-        //load LoggerUser for player, this will generate an empty yml file.
-        new LoggerUser( event.getPlayer(), lEss.getEss(), lEss ).loadLConfig();
-    }
+        @EventHandler
+        public void onPlayerLogin( PlayerLoginEvent event )
+        {
+                //load LoggerUser for player, this will generate an empty yml file.
+                new LoggerUser( event.getPlayer(), lEss.getEss(), lEss ).loadLConfig();
+        }
 }
