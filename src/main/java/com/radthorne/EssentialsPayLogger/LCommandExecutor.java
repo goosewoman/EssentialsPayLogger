@@ -103,7 +103,7 @@ public class LCommandExecutor implements CommandExecutor
                 //my edit
                 if( user == null )
                 {
-                        throw new Exception( "§cError: §4Only in-game players can use " + commandLabel + "." );
+                        throw new Exception( "\u00a7cError: \u00a74Only in-game players can use " + commandLabel + "." );
                 }
                 //
                 if( args.length < 2 )
@@ -235,7 +235,7 @@ public class LCommandExecutor implements CommandExecutor
                         // This is the regular function of the command, for yourself.
                         if( user == null )
                         {
-                                throw new Exception( "§cError: §4Only in-game players can use " + commandLabel + "." );
+                                throw new Exception( "\u00a7cError: \u00a74Only in-game players can use " + commandLabel + "." );
                         }
                         List<String> trans = lUser.getTransactions();
                         trans( trans );
