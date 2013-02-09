@@ -231,4 +231,10 @@ public class LoggerUser extends UserData implements IUser
         {
                 return false;
         }
+
+        @Override
+        public void setLogoutLocation()
+        {
+
+        }
 }
