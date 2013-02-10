@@ -2,5 +2,5 @@
 limit: 90
 
 #should the transactions be saved in the userdata files of Essentials?
-#Note: this slows /baltop down, but may decrease back-up times for larger servers (less files to back-tup
+#Note: this slows /baltop down, but may decrease back-up times for larger servers (less files to back-up)
 inEssUserData: false
