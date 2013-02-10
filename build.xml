@@ -36,6 +36,7 @@
         <!-- Build the jar file -->
         <jar basedir="${classes.dir}" destfile="${jar.dir}/EssentialsPayLogger.jar">
             <fileset dir="${resources.dir}" includes="plugin.yml"/>
+            <fileset dir="${resources.dir}" includes="config.yml"/>
         </jar>
     </target>
 

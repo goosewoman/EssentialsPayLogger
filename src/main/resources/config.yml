@@ -1,0 +1,6 @@
+#this is the limit of transactions that should be logged, note that /transactions reads 9 values at a time, so it's recommended to make it a value divisible by 9
+limit: 90
+
+#should the transactions be saved in the userdata files of Essentials?
+#Note: this slows /baltop down, but may decrease back-up times for larger servers (less files to back-tup
+inEssUserData: false

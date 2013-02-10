@@ -20,34 +20,50 @@ public class LoggerUser extends UserData
 
     private final File folder;
     private final EssentialsConf config;
+    private final LoggerConfig lConf;
     private List<String> transactions;
-    //TODO: make limit configurable.
-    // Limit of the amount of transactions that are saved.
-    private final int limit = 90;
+    private int limit;
 
     public LoggerUser( Player base, IEssentials ess, EssentialsPayLogger lEss )
     {
         super( base, ess );
-        folder = new File( lEss.getDataFolder(), "transactions" );
-        if( !folder.exists() )
+        lConf = new LoggerConfig( lEss );
+        if( lConf.inEssUserData )
         {
-            folder.mkdirs();
+            folder = new File( ess.getDataFolder(), "userdata" );
+            if( !folder.exists() )
+            {
+                folder.mkdirs();
+            }
+            this.config = new EssentialsConf( new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" ) );
+
         }
-        //Open the <username>.yml File
-        File fConfig = new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" );
-        if( !fConfig.exists() )
+        else
         {
-            try
+            this.folder = new File( lEss.getDataFolder(), "transactions" );
+            if( !folder.exists() )
             {
-                fConfig.createNewFile();
-                System.out.println( String.format( "Creating new transactionfile for %s", base.getName() ) );
+                folder.mkdirs();
             }
-            catch( IOException e )
+            //Open the <username>.yml File
+            File fConfig = new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" );
+            if( !fConfig.exists() )
             {
-                e.printStackTrace();
+                try
+                {
+                    fConfig.createNewFile();
+                    System.out.println( String.format( "Creating new transactionfile for %s", base.getName() ) );
+                }
+                catch( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
             }
+            this.config = new EssentialsConf( fConfig );
+
         }
-        config = new EssentialsConf( fConfig );
+        this.limit = lConf.limit;
         loadLConfig();
     }
 
@@ -63,7 +79,6 @@ public class LoggerUser extends UserData
             transactions.remove( 0 );
         }
     }
-
 
     //Method to get the transactions StringList from the config.
     private List<String> _getTransactions()
