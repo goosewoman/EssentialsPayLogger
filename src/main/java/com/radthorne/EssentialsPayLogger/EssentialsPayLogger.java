@@ -20,7 +20,6 @@ public class EssentialsPayLogger extends JavaPlugin
 
     private IEssentials ess;
     private List<PluginCommand> commands = new ArrayList<PluginCommand>();
-    private LoggerConfig config;
 
     @Override
     public void onEnable()
@@ -28,9 +27,7 @@ public class EssentialsPayLogger extends JavaPlugin
         // get Essentials plugin and show an error message and disable the plugin when Essentials is not installed,
         // this should already be handled by bukkit, but I like making sure it works without exploding.
         final PluginManager pm = this.getServer().getPluginManager();
-        final IEssentials essPlugin = (IEssentials) pm.getPlugin( "Essentials" );
-        this.ess = essPlugin;
-        config = new LoggerConfig( this );
+        this.ess = (IEssentials) pm.getPlugin( "Essentials" );
         addCommands();
         for( PluginCommand command : commands )
         {
@@ -53,7 +50,7 @@ public class EssentialsPayLogger extends JavaPlugin
         }
     }
 
-    public void addCommands()
+    private void addCommands()
     {
         commands.add( getCommand( "pay" ) );
         commands.add( getCommand( "transactions" ) );
@@ -89,7 +86,11 @@ public class EssentialsPayLogger extends JavaPlugin
     {
         if( player instanceof Player )
         {
-            return new LoggerUser( (Player) player, ess, this );
+            return new LoggerUser( (Player) player, this );
+        }
+        else if( player instanceof String )
+        {
+            return new LoggerUser( ess.getOfflineUser( (String) player ), this );
         }
         return null;
     }

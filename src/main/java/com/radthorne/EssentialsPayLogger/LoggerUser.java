@@ -3,67 +3,28 @@ package com.radthorne.EssentialsPayLogger;
  * Created by Luuk Jacobs at 17-12-12 18:26
  */
 
-import com.earth2me.essentials.EssentialsConf;
-import com.earth2me.essentials.IEssentials;
+import com.earth2me.essentials.IUser;
 import com.earth2me.essentials.UserData;
-import com.earth2me.essentials.Util;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 public class LoggerUser extends UserData
 {
 
-    private final File folder;
-    private final EssentialsConf config;
-    private final LoggerConfig lConf;
-    private List<String> transactions;
+    private List<String[]> transactions;
     private int limit;
+    private final IUser iUser;
+    private final LoggerUtil lUtil;
 
-    public LoggerUser( Player base, IEssentials ess, EssentialsPayLogger lEss )
+    public LoggerUser( Player base, EssentialsPayLogger lEss )
     {
-        super( base, ess );
-        lConf = new LoggerConfig( lEss );
-        if( lConf.inEssUserData )
-        {
-            folder = new File( ess.getDataFolder(), "userdata" );
-            if( !folder.exists() )
-            {
-                folder.mkdirs();
-            }
-            this.config = new EssentialsConf( new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" ) );
-
-        }
-        else
-        {
-            this.folder = new File( lEss.getDataFolder(), "transactions" );
-            if( !folder.exists() )
-            {
-                folder.mkdirs();
-            }
-            //Open the <username>.yml File
-            File fConfig = new File( folder, Util.sanitizeFileName( base.getName() ) + ".yml" );
-            if( !fConfig.exists() )
-            {
-                try
-                {
-                    fConfig.createNewFile();
-                    System.out.println( String.format( "Creating new transactionfile for %s", base.getName() ) );
-                }
-                catch( IOException e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-            this.config = new EssentialsConf( fConfig );
-
-        }
-        this.limit = lConf.limit;
+        super( base, lEss.getEss() );
+        lUtil = new LoggerUtil( lEss );
+        iUser = ess.getUser( base );
+        this.limit = new LoggerConfig( lEss ).limit;
         loadLConfig();
     }
 
@@ -71,9 +32,7 @@ public class LoggerUser extends UserData
     // Method that loads the config and populates the transactions List with the _getTransactions() Method
     public final void loadLConfig()
     {
-        config.load();
-        transactions = _getTransactions();
-        // remove some values when the transactionlist exceeds the limit.
+        transactions = lUtil.csvListToArray( _getTransactions() );
         while( transactions.size() > limit )
         {
             transactions.remove( 0 );
@@ -83,53 +42,64 @@ public class LoggerUser extends UserData
     //Method to get the transactions StringList from the config.
     private List<String> _getTransactions()
     {
-        return config.getStringList( "transactions" );
+        Object obj = iUser.getConfigMap( "epl" ).get( "transactions" );
+        return obj instanceof List ? (List<String>) obj : null;
     }
 
     //Method that returns the LoggerUser's transactions List
     public List<String> getTransactions()
     {
-        return transactions;
+        return lUtil.listArrayToStringList( transactions );
     }
-
     // Method that saves the transactions to the config and updates the transactions List variable.
     public void setTransactions( List<String> transactions )
     {
-        // if the list is null, re-read the config and get the transactions from there.
+        //// if the list is null, re-read the config and get the transactions from there.
         if( transactions == null )
         {
             transactions = _getTransactions();
         }
         //set the config to the property you provided and save the config
-        config.setProperty( "transactions", transactions );
-        this.transactions = transactions;
-        config.save();
+        iUser.setConfigProperty( "epl.transactions", transactions );
+        this.transactions = lUtil.csvListToArray( transactions );
     }
 
     // Method that adds the transaction to the transactions List variable and saves it to a file.
-    public void addTransaction( double amount, Boolean received, LoggerUser otherUser )
+    public void addTransaction( double amount, boolean received, LoggerUser otherUser )
     {
-
-        String sentReceived;
+        final String[] previousTransaction = transactions.get( transactions.size() - 1 );
+        final int currentTime = lUtil.milliToSec( System.currentTimeMillis() );
         // if received, make the message say <currency><amount> received from <player>,
         // else, make the message say <currency><amount> sent to <player>
-        if( received )
+        String[] message = {
+                Integer.toString( currentTime ),
+                Double.toString( amount ),
+                Boolean.toString( received ),
+                otherUser.getName()
+        };
+
+        // If the payment is done by the same person and to or from the same person in the last transaction,
+        // and if the payment is less than 5 minutes apart, stack the payment and save it.
+        if( !( transactions.size() <= 0 ) )
         {
-            sentReceived = "received from";
+            int diffTime = lUtil.diffTime( previousTransaction[0], message[0] );
+            if( ( diffTime <= 300 ) && ( otherUser.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
+            {
+                amount = Double.parseDouble( previousTransaction[1] ) + amount;
+                message[0] = Integer.toString( currentTime );
+                message[1] = Double.toString( amount );
+                message[2] = Boolean.toString( received );
+                message[3] = otherUser.getName();
+                transactions.remove( transactions.size() - 1 );
+            }
         }
-        else
-        {
-            sentReceived = "sent to";
-        }
-        String message = Util.displayCurrency( amount, ess ) + " " + sentReceived + " " + otherUser.getName();
         transactions.add( message );
         //remove the oldest transaction from the list if the size has exceeded the limit.
-        // a while loop, in case it exceeds the limit by more than one.
         while( transactions.size() > limit )
         {
             transactions.remove( 0 );
         }
-        setTransactions( transactions );
+        setTransactions( lUtil.listArrayToCsvList( transactions ) );
     }
 
 

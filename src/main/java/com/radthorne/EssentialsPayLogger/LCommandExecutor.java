@@ -7,7 +7,6 @@ package com.radthorne.EssentialsPayLogger;
 import com.earth2me.essentials.IEssentials;
 import com.earth2me.essentials.Trade;
 import com.earth2me.essentials.User;
-import com.earth2me.essentials.Util;
 import com.earth2me.essentials.commands.NotEnoughArgumentsException;
 import com.earth2me.essentials.textreader.ArrayListInput;
 import com.earth2me.essentials.textreader.TextPager;
@@ -15,11 +14,8 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,13 +26,13 @@ public class LCommandExecutor implements CommandExecutor
 
     private final EssentialsPayLogger lEss;
     private final IEssentials ess;
-    private final LoggerConfig lConf;
+    private final LoggerUtil lUtil;
 
     public LCommandExecutor( EssentialsPayLogger lEss )
     {
         this.lEss = lEss;
         this.ess = lEss.getEss();
-        this.lConf = new LoggerConfig( lEss );
+        this.lUtil = new LoggerUtil( lEss );
     }
 
     @Override
@@ -142,6 +138,7 @@ public class LCommandExecutor implements CommandExecutor
                 lUser.addTransaction( amount, false, lU );
             }
             //
+            user.sendMessage( "test" );
         }
 
         if( !foundUser )
@@ -151,52 +148,8 @@ public class LCommandExecutor implements CommandExecutor
     }
     //end of stolen code
 
-
-    //simple method that checks whether the string is an integer or not.
-    public static boolean isInt( String s )
-    {
-        try
-        {
-            Integer.parseInt( s );
-        }
-        catch( NumberFormatException e )
-        {
-            return false;
-        }
-        return true;
-    }
-
     //empty transactions ArrayListInput.
-    private static ArrayListInput transactions = new ArrayListInput();
-
-
-    //function to read files of offline players and return the transactions StringList.
-    private List<String> offlineTransactions( String base ) throws Exception
-    {
-        FileConfiguration config;
-        File folder;
-        //get transactions folder, create a new one if it doesn't exist. (It should already exist by now, but there's no harm in doublechecking)
-        if( lConf.inEssUserData )
-        {
-            folder = new File( ess.getDataFolder(), "userdata" );
-        }
-        else
-        {
-            folder = new File( lEss.getDataFolder(), "transactions" );
-        }
-        if( !folder.exists() )
-        {
-            folder.mkdirs();
-        }
-        //Open the <username>.yml File
-        File fConfig = new File( folder, Util.sanitizeFileName( base ) + ".yml" );
-        config = YamlConfiguration.loadConfiguration( fConfig );
-        if( !fConfig.exists() )
-        {
-            throw new NotEnoughArgumentsException( _( "playerNotFound" ) );
-        }
-        return config.getStringList( "transactions" );
-    }
+    private ArrayListInput transactions = new ArrayListInput();
 
     //function to prevent repeating this in the commandTransactions method
     private void trans( List<String> trans )
@@ -214,9 +167,8 @@ public class LCommandExecutor implements CommandExecutor
     {
 
         //check if the args match /transactions <username> [page] and if the user is authorized or the console.
-        if( args.length >= 1 && !isInt( args[0] ) && lEss.isAuthorized( user, "essentialspaylogger.transactions.others" ) )
+        if( args.length >= 1 && !lUtil.isInt( args[0] ) && lEss.isAuthorized( user, "essentialspaylogger.transactions.others" ) )
         {
-
             // variable to check if the user is online
             boolean online = false;
 
@@ -233,7 +185,7 @@ public class LCommandExecutor implements CommandExecutor
             //if user is not online, use the offline method.
             if( !online )
             {
-                List<String> trans = offlineTransactions( args[0] );
+                List<String> trans = lEss.getLUser( args[0] ).getTransactions();
                 trans( trans );
                 new TextPager( transactions ).showPage( args.length > 1 ? args[1] : null, null, commandLabel + " " + args[0], sender );
             }

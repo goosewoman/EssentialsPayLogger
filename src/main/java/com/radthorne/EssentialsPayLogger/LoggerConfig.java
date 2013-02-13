@@ -4,26 +4,14 @@
 
 package com.radthorne.EssentialsPayLogger;
 
-import org.bukkit.configuration.file.FileConfiguration;
-
 public class LoggerConfig
 {
 
-    private final FileConfiguration config;
+    public final int limit;
     public LoggerConfig( EssentialsPayLogger lEss )
     {
-        this.config = lEss.getConfig();
         lEss.saveDefaultConfig();
-        load();
-    }
-
-    public int limit;
-    public boolean inEssUserData;
-
-    public void load()
-    {
-        this.limit = config.getInt( "limit", 90 );
-        this.inEssUserData = config.getBoolean( "inEssUserData", false );
+        this.limit = lEss.getConfig().getInt( "limit", 90 );
     }
 
 }
