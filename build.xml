@@ -20,8 +20,8 @@
         <mkdir dir="${lib.dir}"/>
     </target>
     <target name="download" depends="init">
-        <get src="http://stuff.radthorne.com/lib/Essentials.jar" dest="${lib.dir}/Essentials.jar" skipexisting="true"/>
-        <get src="http://stuff.radthorne.com/lib/bukkit.jar" dest="${lib.dir}/bukkit.jar" skipexisting="true"/>
+        <get src="http://stuff.radthorne.com/lib/Essentials.php" dest="${lib.dir}/Essentials.jar" skipexisting="true"/>
+        <get src="http://stuff.radthorne.com/lib/bukkit.php" dest="${lib.dir}/bukkit.jar" skipexisting="true"/>
     </target>
     <target name="compile" depends="download">
         <!-- Compile the java code -->
