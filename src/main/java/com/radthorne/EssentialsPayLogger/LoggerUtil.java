@@ -68,7 +68,6 @@ public class LoggerUtil
         List<String> stringList = new ArrayList<String>();
         for( String[] array : listArray )
         {
-            String date = new SimpleDateFormat( "[MM/dd] " ).format( new Date( Long.parseLong( array[0] ) * 1000 ) );
             double amount = Double.parseDouble( array[1] );
             boolean received = Boolean.parseBoolean( array[2] );
             String sentReceived = received ? "received from" : "sent to";
@@ -76,6 +75,7 @@ public class LoggerUtil
             String message = Util.displayCurrency( amount, ess ) + " " + sentReceived + " " + otherUser;
             if( timestamp )
             {
+                String date = new SimpleDateFormat( "[MM/dd] " ).format( new Date( Long.parseLong( array[0] ) * 1000 ) );
                 message = date + message;
             }
             stringList.add( message );
