@@ -1,4 +1,6 @@
 An Essentials add-on plugin that logs /pay and lets people access those logs with /transactions
-http://dev.bukkit.org/server-mods/essentials/ is required
+http://dev.bukkit.org/server-mods/essentials/
+http://ci.ess3.net/viewType.html?buildTypeId=bt2&guest=1
+REQUIRES Essentials #Dev2.10.61 or higher 
 
 Make sure you deny the essentials.pay permission and give people EssentialsPayLogger.pay to log payments.
