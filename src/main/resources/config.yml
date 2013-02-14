@@ -1,2 +1,14 @@
-#this is the limit of transactions that should be logged, note that /transactions reads 9 values at a time, so it's recommended to make it a value divisible by 9
-limit: 90
+# this is the limit of transactions that should be logged,
+# note that /transactions reads 9 values at a time,
+# so it's recommended to make it a value divisible by 9
+limit: 45
+
+# Any consecutive payments by the same person to the same person
+# within this time are stacked.
+# Time is in seconds (Set to 0 if you don't want stacking)
+stackTime: 300
+
+# Shows at what day each payment is done using the format [MM/dd] (So the 18th of februari would be [02/18])
+# Using this may make the plugin slightly slower,
+# not recommended on really big servers or with really high transaction limits.
+timeStamp: true

@@ -15,7 +15,9 @@ public class LoggerUser extends UserData
 {
 
     private List<String[]> transactions;
-    private int limit;
+    private final int limit;
+    private final int stackTime;
+    private final boolean timeStamp;
     private final IUser iUser;
     private final LoggerUtil lUtil;
 
@@ -24,7 +26,10 @@ public class LoggerUser extends UserData
         super( base, lEss.getEss() );
         lUtil = new LoggerUtil( lEss );
         iUser = ess.getUser( base );
-        this.limit = new LoggerConfig( lEss ).limit;
+        LoggerConfig conf = new LoggerConfig( lEss );
+        this.limit = conf.getLimit();
+        this.stackTime = conf.getStackTime();
+        this.timeStamp = conf.isTimeStamp();
         loadLConfig();
     }
 
@@ -49,7 +54,14 @@ public class LoggerUser extends UserData
     //Method that returns the LoggerUser's transactions List
     public List<String> getTransactions()
     {
-        return lUtil.listArrayToStringList( transactions );
+        if( timeStamp )
+        {
+            return lUtil.listArrayToStringList( transactions, true );
+        }
+        else
+        {
+            return lUtil.listArrayToStringList( transactions, false );
+        }
     }
     // Method that saves the transactions to the config and updates the transactions List variable.
     public void setTransactions( List<String> transactions )
@@ -83,7 +95,7 @@ public class LoggerUser extends UserData
         if( !( transactions.size() <= 0 ) )
         {
             int diffTime = lUtil.diffTime( previousTransaction[0], message[0] );
-            if( ( diffTime <= 300 ) && ( otherUser.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
+            if( ( diffTime <= stackTime ) && ( otherUser.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
             {
                 amount = Double.parseDouble( previousTransaction[1] ) + amount;
                 message[0] = Integer.toString( currentTime );
