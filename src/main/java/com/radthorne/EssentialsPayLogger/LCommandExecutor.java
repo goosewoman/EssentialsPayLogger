@@ -8,6 +8,7 @@ import com.earth2me.essentials.IEssentials;
 import com.earth2me.essentials.Trade;
 import com.earth2me.essentials.User;
 import com.earth2me.essentials.commands.NotEnoughArgumentsException;
+import com.earth2me.essentials.commands.PlayerNotFoundException;
 import com.earth2me.essentials.textreader.ArrayListInput;
 import com.earth2me.essentials.textreader.TextPager;
 import org.bukkit.Server;
@@ -167,8 +168,12 @@ public class LCommandExecutor implements CommandExecutor
     {
 
         //check if the args match /transactions <username> [page] and if the user is authorized or the console.
-        if( args.length >= 1 && !lUtil.isInt( args[0] ) && lEss.isAuthorized( user, "essentialspaylogger.transactions.others" ) )
+        if( args.length >= 1 && !lUtil.isInt( args[0] ) )
         {
+            if( !lEss.isAuthorized( user, "essentialspaylogger.transactions.others" ) )
+            {
+                return;
+            }
             // variable to check if the user is online
             boolean online = false;
 
@@ -185,7 +190,12 @@ public class LCommandExecutor implements CommandExecutor
             //if user is not online, use the offline method.
             if( !online )
             {
-                List<String> trans = lEss.getLUser( args[0] ).getTransactions();
+                LoggerUser lU;
+                if( ( lU = lEss.getLUser( args[0] ) ) == null )
+                {
+                    throw new PlayerNotFoundException();
+                }
+                List<String> trans = lU.getTransactions();
                 trans( trans );
                 new TextPager( transactions ).showPage( args.length > 1 ? args[1] : null, null, commandLabel + " " + args[0], sender );
             }

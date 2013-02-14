@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +91,11 @@ public class EssentialsPayLogger extends JavaPlugin
         }
         else if( player instanceof String )
         {
-            return new LoggerUser( ess.getOfflineUser( (String) player ), this );
+            if( !new File( ess.getDataFolder(), "userdata/" + player + ".yml" ).exists() )
+            {
+                return null;
+            }
+            return new LoggerUser( ess.getOfflineUser( (String) player ).getBase(), this );
         }
         return null;
     }
