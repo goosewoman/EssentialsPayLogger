@@ -112,10 +112,6 @@ public class LoggerUser
         setTransactions( lUtil.listArrayToCsvList( transactions ) );
     }
 
-    public Player getBase()
-    {
-        return this.base;
-    }
     public String getName()
     {
         return this.base.getName();
