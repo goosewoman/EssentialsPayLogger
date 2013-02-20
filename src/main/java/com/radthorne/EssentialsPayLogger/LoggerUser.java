@@ -85,7 +85,7 @@ public class LoggerUser
                 Integer.toString( currentTime ),
                 Double.toString( amount ),
                 Boolean.toString( received ),
-                base.getName()
+                otherUser.getName()
         };
 
         // If the payment is done by the same person and to or from the same person in the last transaction,
@@ -93,13 +93,13 @@ public class LoggerUser
         if( !( transactions.size() <= 0 ) )
         {
             int diffTime = lUtil.diffTime( previousTransaction[0], message[0] );
-            if( ( diffTime <= stackTime ) && ( base.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
+            if( ( diffTime <= stackTime ) && ( otherUser.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
             {
                 amount = Double.parseDouble( previousTransaction[1] ) + amount;
                 message[0] = Integer.toString( currentTime );
                 message[1] = Double.toString( amount );
                 message[2] = Boolean.toString( received );
-                message[3] = base.getName();
+                message[3] = otherUser.getName();
                 transactions.remove( transactions.size() - 1 );
             }
         }
@@ -112,6 +112,10 @@ public class LoggerUser
         setTransactions( lUtil.listArrayToCsvList( transactions ) );
     }
 
+    public Player getBase()
+    {
+        return this.base;
+    }
     public String getName()
     {
         return this.base.getName();
