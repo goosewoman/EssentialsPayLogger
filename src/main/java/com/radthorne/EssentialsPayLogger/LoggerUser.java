@@ -4,14 +4,11 @@ package com.radthorne.EssentialsPayLogger;
  */
 
 import com.earth2me.essentials.IUser;
-import com.earth2me.essentials.UserData;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EntityEquipment;
 
 import java.util.List;
 
-public class LoggerUser extends UserData
+public class LoggerUser
 {
 
     private List<String[]> transactions;
@@ -20,12 +17,13 @@ public class LoggerUser extends UserData
     private final boolean timeStamp;
     private final IUser iUser;
     private final LoggerUtil lUtil;
+    private final Player base;
 
     public LoggerUser( Player base, EssentialsPayLogger lEss )
     {
-        super( base, lEss.getEss() );
-        lUtil = new LoggerUtil( lEss );
-        iUser = ess.getUser( base );
+        this.base = base;
+        this.lUtil = new LoggerUtil( lEss );
+        this.iUser = lEss.getEss().getUser( base );
         LoggerConfig conf = new LoggerConfig( lEss );
         this.limit = conf.getLimit();
         this.stackTime = conf.getStackTime();
@@ -87,7 +85,7 @@ public class LoggerUser extends UserData
                 Integer.toString( currentTime ),
                 Double.toString( amount ),
                 Boolean.toString( received ),
-                otherUser.getName()
+                base.getName()
         };
 
         // If the payment is done by the same person and to or from the same person in the last transaction,
@@ -95,13 +93,13 @@ public class LoggerUser extends UserData
         if( !( transactions.size() <= 0 ) )
         {
             int diffTime = lUtil.diffTime( previousTransaction[0], message[0] );
-            if( ( diffTime <= stackTime ) && ( otherUser.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
+            if( ( diffTime <= stackTime ) && ( base.getName().equals( previousTransaction[3] ) ) && ( Boolean.toString( received ).equals( previousTransaction[2] ) ) )
             {
                 amount = Double.parseDouble( previousTransaction[1] ) + amount;
                 message[0] = Integer.toString( currentTime );
                 message[1] = Double.toString( amount );
                 message[2] = Boolean.toString( received );
-                message[3] = otherUser.getName();
+                message[3] = base.getName();
                 transactions.remove( transactions.size() - 1 );
             }
         }
@@ -114,45 +112,8 @@ public class LoggerUser extends UserData
         setTransactions( lUtil.listArrayToCsvList( transactions ) );
     }
 
-
-    @Override
-    public void setTexturePack( String s )
+    public String getName()
     {
-    }
-    @Override
-    public boolean getRemoveWhenFarAway()
-    {
-        return false;
-    }
-    @Override
-    public void setRemoveWhenFarAway( boolean b )
-    {
-    }
-    @Override
-    public EntityEquipment getEquipment()
-    {
-        return null;
-    }
-    @Override
-    public void setCanPickupItems( boolean b )
-    {
-    }
-    @Override
-    public boolean getCanPickupItems()
-    {
-        return false;
-    }
-    @Override
-    public void setMaxHealth( int i )
-    {
-    }
-    @Override
-    public void resetMaxHealth()
-    {
-    }
-    @Override
-    public Location getLocation( Location location )
-    {
-        return null;
+        return this.base.getName();
     }
 }
