@@ -10,5 +10,4 @@ stackTime: 300
 
 # Shows at what day each payment is done using the format [MM/dd] (So the 18th of februari would be [02/18])
 # Using this may make the plugin slightly slower,
-# not recommended on really big servers or with really high transaction limits.
 timeStamp: true
